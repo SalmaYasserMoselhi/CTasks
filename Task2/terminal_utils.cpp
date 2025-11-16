@@ -1,6 +1,10 @@
 #include "terminal_utils.h"
 
 #include <iostream>
+#include <string>
+#include <thread>
+#include <chrono>
+#include <cstdlib>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -13,6 +17,9 @@
 #endif
 #else
   #include <unistd.h>
+  #include <termios.h>
+  #include <fcntl.h>
+  #include <sys/select.h>
 #endif
 
 namespace
@@ -79,7 +86,11 @@ bool initTerminal()
 #if defined(_WIN32)
         g_ansiEnabled = enableVirtualTerminalProcessing();
 #else
-        g_ansiEnabled = true;
+        // Only enable ANSI if stdout is a TTY and TERM is not "dumb"
+        bool isTTY = (isatty(STDOUT_FILENO) != 0);
+        const char *term = std::getenv("TERM");
+        bool termOk = (term && std::string(term) != "dumb");
+        g_ansiEnabled = (isTTY && termOk);
 #endif
         g_inited = true;
     }
@@ -173,7 +184,8 @@ void clearScreen()
 #if defined(_WIN32)
     if (ansiEnabled())
     {
-        std::cout << "\x1b[2J\x1b[H";
+        // Clear screen and move cursor home. Try also to clear scrollback.
+        std::cout << "\x1b[H\x1b[2J\x1b[3J\x1b[H";
         std::cout.flush();
         return;
     }
@@ -194,7 +206,12 @@ void clearScreen()
 #else
     if (ansiEnabled())
     {
-        std::cout << "\x1b[2J\x1b[H";
+        // Move cursor home, clear screen, clear scrollback, then move home again
+        std::cout << "\x1b[H\x1b[2J\x1b[3J\x1b[H";
+        std::cout.flush();
+    } else {
+        // Fallback when no ANSI: print many newlines to emulate clear
+        for (int i = 0; i < 80; ++i) std::cout << '\n';
         std::cout.flush();
     }
 #endif
@@ -202,11 +219,8 @@ void clearScreen()
 
 void delay(int milliseconds)
 {
-#if defined(_WIN32)
-    Sleep(milliseconds);
-#else
-    sleep(milliseconds / 1000);
-#endif
+    if (milliseconds <= 0) return;
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
 /* =========================
@@ -230,6 +244,9 @@ static void drawMenuUI(int selected)
 {
     clearScreen();
 
+    // hide cursor while redrawing (if ANSI is available)
+    if (ansiEnabled()) std::cout << "\x1b[?25l";
+
     // Title
     drawText(10, 4, colorText("=== Main Menu ===", Default));
 
@@ -249,6 +266,11 @@ static void drawMenuUI(int selected)
     btn(yExit,    "[ Exit ]",    selected == 2);
 
     drawText(10, 14, colorText("Left=Up  Right=Down  Enter=select  Esc=quit  Backspace=back", BrightBlack));
+
+    // show cursor again
+    if (ansiEnabled()) std::cout << "\x1b[?25h";
+
+    std::cout.flush();
 }
 
 #if defined(_WIN32)
@@ -277,11 +299,6 @@ static Key readKey()
 }
 
 #else
-#include <termios.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/select.h>
-
 // Raw mode with blocking reads (VMIN=1, VTIME=0)
 class TerminalRawMode {
 public:
@@ -372,7 +389,7 @@ static int showSelectionScreen(int selected)
         } else if (k == KeyEsc) {
             return -1; // exit app
         } else if (k == KeyEnter) {
-            // optional: ignore or confirm-exit
+            // ignore or future confirm behavior
         }
     }
 }
