@@ -1,3 +1,4 @@
+// terminal_utils.cpp
 #include "terminal_utils.h"
 
 #include <iostream>
@@ -222,7 +223,7 @@ void delay(int milliseconds)
 #if defined(_WIN32)
     Sleep(milliseconds); // Windows: Sleep بالـ milliseconds
 #else
-    sleep(milliseconds / 1000); 
+    usleep(milliseconds * 1000);
 #endif
 }
 
@@ -242,16 +243,19 @@ enum Key {
     KeyBackspace
 };
 
+// Helper: clear to end of the current line (after drawText positioned cursor)
+static void clearToEol()
+{
+    if (ansiEnabled()) std::cout << "\x1b[K";
+}
+
 // Helper: draw the menu vertically with a selected index
+// IMPORTANT: no full-screen clear and no cursor show/hide here.
 static void drawMenuUI(int selected)
 {
-    clearScreen();
-
-    // hide cursor while redrawing (if ANSI is available)
-    if (ansiEnabled()) std::cout << "\x1b[?25l";
-
     // Title
     drawText(10, 4, colorText("=== Main Menu ===", Default));
+    clearToEol();
 
     // Button positions (vertically aligned)
     const int x = 12;
@@ -262,6 +266,7 @@ static void drawMenuUI(int selected)
     auto btn = [&](int y, const char* label, bool sel) {
         Color c = sel ? BrightCyan : Default;
         drawText(x, y, colorText(label, c));
+        clearToEol();
     };
 
     btn(yNew,     "[ New ]",     selected == 0);
@@ -269,9 +274,10 @@ static void drawMenuUI(int selected)
     btn(yExit,    "[ Exit ]",    selected == 2);
 
     drawText(10, 14, colorText("Left=Up  Right=Down  Enter=select  Esc=quit  Backspace=back", BrightBlack));
+    clearToEol();
 
-    // show cursor again
-    if (ansiEnabled()) std::cout << "\x1b[?25h";
+    // Optionally park the cursor far away to avoid showing near UI in some terminals
+    if (ansiEnabled()) std::cout << "\x1b[1000;1H";
 
     std::cout.flush();
 }
@@ -380,6 +386,8 @@ static int showSelectionScreen(int selected)
                      : "You chose: Exit";
     drawText(10, 6, colorText(msg, BrightGreen));
     drawText(10, 8, colorText("Press Backspace to go back, or Esc to quit.", BrightBlack));
+    if (ansiEnabled()) std::cout << "\x1b[1000;1H";
+    std::cout.flush();
 
 #if !defined(_WIN32)
     TerminalRawMode _rawModeGuard;
@@ -406,23 +414,34 @@ int showMenuInteractive()
     TerminalRawMode _rawModeGuard;
 #endif
 
+    // Hide cursor for the entire interactive session
+    if (ansiEnabled()) std::cout << "\x1b[?25l";
+
     int selected = 0;
 
+    clearScreen();
+    drawMenuUI(selected);
+
     while (true) {
-        drawMenuUI(selected);
         Key k = readKey();
 
         switch (k) {
             // Left behaves like Up
             case KeyLeft:
             case KeyUp:
-                if (selected > 0) selected--;
+                if (selected > 0) {
+                    selected--;
+                    drawMenuUI(selected); // redraw without clearing the whole screen
+                }
                 break;
 
             // Right behaves like Down
             case KeyRight:
             case KeyDown:
-                if (selected < 2) selected++;
+                if (selected < 2) {
+                    selected++;
+                    drawMenuUI(selected);
+                }
                 break;
 
             case KeyEnter: {
@@ -430,9 +449,12 @@ int showMenuInteractive()
                 if (r == -2) {
                     // Backspace on selection screen: back to menu
                     clearScreen();
+                    drawMenuUI(selected);
                     continue;
                 } else if (r == -1) {
                     clearScreen();
+                    if (ansiEnabled()) std::cout << "\x1b[?25h";
+                    std::cout.flush();
                     return -1; // Esc: quit
                 }
                 break;
@@ -440,6 +462,8 @@ int showMenuInteractive()
 
             case KeyEsc:
                 clearScreen();
+                if (ansiEnabled()) std::cout << "\x1b[?25h";
+                std::cout.flush();
                 return -1;
 
             case KeyBackspace:
@@ -451,4 +475,15 @@ int showMenuInteractive()
                 break;
         }
     }
+}
+
+// Optional non-interactive render (if you keep this API in the header)
+void showMenu()
+{
+    initTerminal();
+    clearScreen();
+    if (ansiEnabled()) std::cout << "\x1b[?25l";
+    drawMenuUI(0);
+    if (ansiEnabled()) std::cout << "\x1b[?25h";
+    std::cout.flush();
 }
