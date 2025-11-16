@@ -219,8 +219,11 @@ void clearScreen()
 
 void delay(int milliseconds)
 {
-    if (milliseconds <= 0) return;
-    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+#if defined(_WIN32)
+    Sleep(milliseconds); // Windows: Sleep بالـ milliseconds
+#else
+    sleep(milliseconds / 1000); 
+#endif
 }
 
 /* =========================
