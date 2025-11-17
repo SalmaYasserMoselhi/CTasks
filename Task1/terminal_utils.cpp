@@ -97,7 +97,7 @@ void clearScreen()
 void delay(int milliseconds)
 {
 #if defined(_WIN32)
-    Sleep(milliseconds); // Windows: Sleep بالـ milliseconds
+    Sleep(milliseconds); 
 #else
     usleep(milliseconds * 1000);
 #endif
