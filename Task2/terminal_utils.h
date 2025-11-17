@@ -24,6 +24,19 @@ enum Color
     BrightWhite
 };
 
+// Key enum for input
+enum Key {
+    KeyNone = 0,
+    KeyUp,
+    KeyDown,
+    KeyLeft,
+    KeyRight,
+    KeyEnter,
+    KeyEsc,
+    KeyBackspace
+};
+
+
 bool initTerminal();
 bool drawText(int x, int y, const std::string &text);
 std::string colorText(const std::string &text, Color color);

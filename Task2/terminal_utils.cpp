@@ -9,7 +9,7 @@
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
-#define NOMINMAX
+#define NOMINMAX  // Prevent Windows headers from defining min/max macros
 #endif
 #include <windows.h>
 // Fallback for older MinGW headers:
@@ -33,7 +33,7 @@ namespace
     {
         switch (c)
         {
-        case Black:         return "\x1b[30m";
+        case Black:         return "\x1b[30m";   // Escape code for black
         case Red:           return "\x1b[31m";
         case Green:         return "\x1b[32m";
         case Yellow:        return "\x1b[33m";
@@ -62,22 +62,30 @@ namespace
 #if defined(_WIN32)
     bool enableVirtualTerminalProcessing()
     {
+        // Get a handle to the console's standard output
         HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
         if (hOut == INVALID_HANDLE_VALUE || hOut == nullptr)
             return false;
 
+        // Read the current console mode (settings)
         DWORD dwMode = 0;
         if (!GetConsoleMode(hOut, &dwMode))
             return false;
 
+        // Add the flag that enables ANSI escape sequence (VT processing)
         DWORD desired = dwMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+
+        // Apply the updated mode back to the console
         if (!SetConsoleMode(hOut, desired))
         {
             return false;
         }
+
+        // Success: console now supports ANSI escape codes
         return true;
     }
 #endif
+
 } // anonymous namespace
 
 bool initTerminal()
@@ -87,11 +95,7 @@ bool initTerminal()
 #if defined(_WIN32)
         g_ansiEnabled = enableVirtualTerminalProcessing();
 #else
-        // Only enable ANSI if stdout is a TTY and TERM is not "dumb"
-        bool isTTY = (isatty(STDOUT_FILENO) != 0);
-        const char *term = std::getenv("TERM");
-        bool termOk = (term && std::string(term) != "dumb");
-        g_ansiEnabled = (isTTY && termOk);
+        g_ansiEnabled = true; // Assume ANSI on POSIX
 #endif
         g_inited = true;
     }
@@ -109,14 +113,16 @@ bool drawText(int x, int y, const std::string &text)
     if (!validPos(x, y))
         return false;
 
-#if defined(_WIN32)
-    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+#if defined(_WIN32) 
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);   // Get handle to the standard output (console)
+
     if (hOut == INVALID_HANDLE_VALUE || hOut == nullptr)
-        return false;
+        return false; // If handle is invalid, fail
 
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (!GetConsoleScreenBufferInfo(hOut, &csbi))
     {
+        // If unable to get console info, fallback to ANSI escape codes if enabled
         if (ansiEnabled())
         {
             std::cout << "\x1b[" << y << ";" << x << "H" << text;
@@ -126,12 +132,15 @@ bool drawText(int x, int y, const std::string &text)
         return false;
     }
 
+    // Convert coordinates to Windows COORD (0-based indexing)
     COORD pos;
     pos.X = static_cast<SHORT>(x - 1);
     pos.Y = static_cast<SHORT>(y - 1);
 
+    // Try to move the cursor to the desired position
     if (!SetConsoleCursorPosition(hOut, pos))
     {
+        // If cursor positioning fails, fallback to ANSI escape codes
         if (ansiEnabled())
         {
             std::cout << "\x1b[" << y << ";" << x << "H" << text;
@@ -141,17 +150,21 @@ bool drawText(int x, int y, const std::string &text)
         return false;
     }
 
+    // Write text directly to the console at the cursor position
     DWORD written = 0;
     if (!WriteConsoleA(hOut, text.c_str(),
                        static_cast<DWORD>(text.size()),
                        &written, nullptr))
     {
+        // If writing fails, just print normally
         std::cout << text;
         std::cout.flush();
         return false;
     }
     return true;
-#else
+
+#else  // If compiling on Linux/Unix (POSIX systems)
+    // Use ANSI escape codes to move cursor and print text
     std::cout << "\x1b[" << y << ";" << x << "H" << text;
     std::cout.flush();
     return true;
@@ -210,10 +223,6 @@ void clearScreen()
         // Move cursor home, clear screen, clear scrollback, then move home again
         std::cout << "\x1b[H\x1b[2J\x1b[3J\x1b[H";
         std::cout.flush();
-    } else {
-        // Fallback when no ANSI: print many newlines to emulate clear
-        for (int i = 0; i < 80; ++i) std::cout << '\n';
-        std::cout.flush();
     }
 #endif
 }
@@ -221,36 +230,20 @@ void clearScreen()
 void delay(int milliseconds)
 {
 #if defined(_WIN32)
-    Sleep(milliseconds); // Windows: Sleep بالـ milliseconds
+    Sleep(milliseconds); // Windows: Sleep with milliseconds
 #else
     usleep(milliseconds * 1000);
 #endif
 }
 
-/* =========================
-   Interactive menu section
-   ========================= */
 
-// Key enum for input
-enum Key {
-    KeyNone = 0,
-    KeyUp,
-    KeyDown,
-    KeyLeft,
-    KeyRight,
-    KeyEnter,
-    KeyEsc,
-    KeyBackspace
-};
-
-// Helper: clear to end of the current line (after drawText positioned cursor)
+// clear to end of the current line (after drawText positioned cursor)
 static void clearToEol()
 {
     if (ansiEnabled()) std::cout << "\x1b[K";
 }
 
-// Helper: draw the menu vertically with a selected index
-// IMPORTANT: no full-screen clear and no cursor show/hide here.
+// draw the menu vertically with a selected index
 static void drawMenuUI(int selected)
 {
     // Title
@@ -263,7 +256,7 @@ static void drawMenuUI(int selected)
     const int yDisplay = 9;
     const int yExit    = 11;
 
-    auto btn = [&](int y, const char* label, bool sel) {
+    auto btn = [&](int y, const char* label, bool sel) {  // auto can be used for lambda functions
         Color c = sel ? BrightCyan : Default;
         drawText(x, y, colorText(label, c));
         clearToEol();
@@ -283,12 +276,12 @@ static void drawMenuUI(int selected)
 }
 
 #if defined(_WIN32)
-#include <conio.h>
+#include <conio.h>   // console input/output for Windows
 
 // Blocking key read
 static Key readKey()
 {
-    int ch = _getch(); // blocks
+    int ch = _getch(); // reads only one character from console
 
     if (ch == 27) return KeyEsc;           // ESC
     if (ch == '\r') return KeyEnter;       // Enter
@@ -310,35 +303,48 @@ static Key readKey()
 #else
 // Raw mode with blocking reads (VMIN=1, VTIME=0)
 class TerminalRawMode {
+private:
+    termios orig;   // Original terminal settings
+    bool enabled;   // Flag to check if raw mode is active
 public:
     TerminalRawMode() : enabled(false) {
+        // Save the original terminal settings
         if (tcgetattr(STDIN_FILENO, &orig) == 0) {
-            termios raw = orig;
-            raw.c_lflag &= ~(ICANON | ECHO);
-            raw.c_cc[VMIN]  = 1; // block for at least 1 byte
-            raw.c_cc[VTIME] = 0; // no timeout
+            termios raw = orig; // Copy the original settings
+
+            // Enable Raw mode: terminal sends each keystroke immediately, no buffering, no echo.
+            raw.c_lflag &= ~(ICANON | ECHO);  
+
+            // VMIN = 1 → block until at least 1 byte is read
+            raw.c_cc[VMIN]  = 1;
+            // VTIME = 0 → no timeout, wait indefinitely
+            raw.c_cc[VTIME] = 0;
+
+            // Apply the new settings immediately
             if (tcsetattr(STDIN_FILENO, TCSANOW, &raw) == 0) {
-                enabled = true;
+                enabled = true; // Raw mode successfully enabled
             }
         }
     }
+
     ~TerminalRawMode() {
+        // When the object is destroyed, restore the original settings
         if (enabled) tcsetattr(STDIN_FILENO, TCSANOW, &orig);
     }
-private:
-    termios orig;
-    bool enabled;
+
 };
 
 // POSIX: reliably detect bare ESC with a tiny timeout
 static Key readKey()
 {
     unsigned char c;
+    // Read one byte from keyboard
     ssize_t n = read(STDIN_FILENO, &c, 1);
-    if (n <= 0) return KeyNone;
+    if (n <= 0) return KeyNone; // No input
 
-    if (c == 27) { // ESC or start of CSI sequence
-        // Wait briefly for the next byte to see if it's an escape sequence.
+    // If the key is ESC (ASCII 27)
+    if (c == 27) {
+        // Wait briefly (30 ms) to see if another byte follows (escape sequence)
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(STDIN_FILENO, &rfds);
@@ -348,31 +354,38 @@ static Key readKey()
 
         int r = select(STDIN_FILENO + 1, &rfds, nullptr, nullptr, &tv);
         if (r == 1) {
-            // Another byte available: read and parse sequence
+            // Another byte is available: read it
             unsigned char b1;
             if (read(STDIN_FILENO, &b1, 1) == 1) {
+                // If it's '[', then it's the start of an arrow key sequence
                 if (b1 == '[') {
                     unsigned char b2;
                     if (read(STDIN_FILENO, &b2, 1) == 1) {
+                        // Map the sequence to arrow keys
                         switch (b2) {
-                            case 'A': return KeyUp;
-                            case 'B': return KeyDown;
-                            case 'C': return KeyRight;
-                            case 'D': return KeyLeft;
-                            default:  return KeyNone;
+                            case 'A': return KeyUp;    // Up arrow
+                            case 'B': return KeyDown;  // Down arrow
+                            case 'C': return KeyRight; // Right arrow
+                            case 'D': return KeyLeft;  // Left arrow
+                            default:  return KeyNone;  // Unknown sequence
                         }
                     }
                 }
             }
-            return KeyNone;
+            return KeyNone; // Sequence not recognized
         } else {
-            // No more bytes: treat as bare ESC
+            // No extra byte → treat as plain ESC key
             return KeyEsc;
         }
     }
 
+    // Enter key (LF=10 or CR=13)
     if (c == '\n' || c == '\r') return KeyEnter;
-    if (c == 127 || c == 8)     return KeyBackspace; // DEL or BS
+
+    // Backspace key (DEL=127 or BS=8)
+    if (c == 127 || c == 8)     return KeyBackspace;
+
+    // Any other key not handled
     return KeyNone;
 }
 #endif
@@ -389,7 +402,7 @@ static int showSelectionScreen(int selected)
     if (ansiEnabled()) std::cout << "\x1b[1000;1H";
     std::cout.flush();
 
-#if !defined(_WIN32)
+#if !defined(_WIN32)   // windows uses conio.h to read keys
     TerminalRawMode _rawModeGuard;
 #endif
 
@@ -400,7 +413,7 @@ static int showSelectionScreen(int selected)
         } else if (k == KeyEsc) {
             return -1; // exit app
         } else if (k == KeyEnter) {
-            // ignore or future confirm behavior
+            // Ignore
         }
     }
 }
@@ -408,7 +421,7 @@ static int showSelectionScreen(int selected)
 // Returns: -1 on Esc to exit. Otherwise loops allowing backspace to return.
 int showMenuInteractive()
 {
-    initTerminal();
+    // initTerminal();
 
 #if !defined(_WIN32)
     TerminalRawMode _rawModeGuard;
@@ -453,7 +466,7 @@ int showMenuInteractive()
                     continue;
                 } else if (r == -1) {
                     clearScreen();
-                    if (ansiEnabled()) std::cout << "\x1b[?25h";
+                    if (ansiEnabled()) std::cout << "\x1b[?25h"; 
                     std::cout.flush();
                     return -1; // Esc: quit
                 }
@@ -475,15 +488,4 @@ int showMenuInteractive()
                 break;
         }
     }
-}
-
-// Optional non-interactive render (if you keep this API in the header)
-void showMenu()
-{
-    initTerminal();
-    clearScreen();
-    if (ansiEnabled()) std::cout << "\x1b[?25l";
-    drawMenuUI(0);
-    if (ansiEnabled()) std::cout << "\x1b[?25h";
-    std::cout.flush();
 }
