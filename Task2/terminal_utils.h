@@ -43,7 +43,7 @@ void clearScreen();
 void delay(int milliseconds);
 
 // Menu API
-void showMenu();                 // optional, kept for compatibility (can be no-op or simple render)
+void showMenu();            // non-interactive
 int  showMenuInteractive();      // interactive: returns -1 on Esc
 
 #endif // TERMINAL_UTILS_H
