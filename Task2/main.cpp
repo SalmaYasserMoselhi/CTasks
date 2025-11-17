@@ -2,8 +2,6 @@
 #include "terminal_utils.h"
 
 int main() {
-    initTerminal();
-
     int result = showMenuInteractive();
 
     resetColor();
