@@ -67,7 +67,7 @@ namespace
     }
 }
 
-// Pure ANSI cursor move + print
+// ANSI cursor move + print (x: column, y: row)
 bool drawText(int x, int y, const std::string &text)
 {
     if (!validPos(x, y))
@@ -84,7 +84,7 @@ std::string colorText(const std::string &text, Color color)
     out.append(colorToAnsi(color));
     out.append(text);
     out.append("\x1b[0m");
-    return out;
+    return out;  // output example: "\x1b[31mText\x1b[0m"
 }
 
 void resetColor()

@@ -44,7 +44,7 @@ int askUserForN() {
     while (true) {
         std::cout << "Enter an odd number for magic square size: ";
         std::cin >> n;
-        if (n > 0 && n % 2 == 1) {
+        if (n > 2 && n % 2 == 1) {
             return n;
         } else {
             std::cout << "Invalid input! You must enter an odd number.\n";

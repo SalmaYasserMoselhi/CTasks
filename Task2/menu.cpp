@@ -21,7 +21,6 @@ static void clearToEol()
 // draw the menu vertically with a selected index
 static void drawMenuUI(int selected)
 {
-    // Title
     drawText(10, 4, colorText("=== Main Menu ===", Default));
     clearToEol();
 
@@ -84,7 +83,6 @@ static Key readKey()
 }
 
 #else
-// Raw mode with blocking getchar() reads (no read()).
 class TerminalRawMode
 {
 private:
@@ -96,9 +94,9 @@ public:
     {
         if (tcgetattr(STDIN_FILENO, &orig) == 0)
         {
-            termios raw = orig;
+            termios raw = orig;  // copy original settings
 
-            // Raw-ish: disable canonical mode and echo so getchar() returns immediately per key
+            // disable canonical mode and echo so getchar() returns immediately per key
             raw.c_lflag &= ~(ICANON | ECHO);
             raw.c_cc[VMIN] = 1;
             raw.c_cc[VTIME] = 0;
@@ -124,17 +122,16 @@ public:
 
 static bool stdinHasData(int timeoutUsec)
 {
-    fd_set rfds;
-    FD_ZERO(&rfds);
-    FD_SET(STDIN_FILENO, &rfds);
+    fd_set rfds;  // file descriptor set
+    FD_ZERO(&rfds);  // clear the set
+    FD_SET(STDIN_FILENO, &rfds);  // add stdin to the set
     timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = timeoutUsec;
-    int r = select(STDIN_FILENO + 1, &rfds, nullptr, nullptr, &tv);
-    return r == 1;
+    int r = select(STDIN_FILENO + 1, &rfds, nullptr, nullptr, &tv);  // wait for data
+    return r == 1;  // if 1, data is available
 }
 
-// Blocking key read using getchar() and minimal lookahead for escape sequences
 static Key readKey()
 {
     int c = std::getchar();
@@ -149,23 +146,21 @@ static Key readKey()
             int b1 = std::getchar();
             if (b1 == '[')
             {
-                if (stdinHasData(30000))
+                int b2 = std::getchar();
+                switch (b2)
                 {
-                    int b2 = std::getchar();
-                    switch (b2)
-                    {
-                    case 'A':
-                        return KeyUp;
-                    case 'B':
-                        return KeyDown;
-                    case 'C':
-                        return KeyRight;
-                    case 'D':
-                        return KeyLeft;
-                    default:
-                        return KeyNone;
-                    }
+                case 'A':
+                    return KeyUp;
+                case 'B':
+                    return KeyDown;
+                case 'C':
+                    return KeyRight;
+                case 'D':
+                    return KeyLeft;
+                default:
+                    return KeyNone;
                 }
+                
                 return KeyNone;
             }
             return KeyNone;
