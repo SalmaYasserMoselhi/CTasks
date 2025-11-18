@@ -6,6 +6,6 @@ int str_cmp(char str1[], char str2[]);
 void to_upper(char str[]);
 void to_lower(char str[]);
 void str_copy(char str1[], char str2[]);
-void str_concat(char str1[], char str2[]);
+void str_concat(int str1_size,char str1[], char str2[]);
 
 #endif

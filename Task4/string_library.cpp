@@ -64,7 +64,11 @@ void str_copy(char str1[], char str2[]) {
     str1[i] = '\0';
 }
 
-void str_concat(char str1[], char str2[]) {
+void str_concat(int str1_size, char str1[], char str2[]) {
+    if (str1_size < str_len(str1) + str_len(str2) + 1) {
+        cout << "Destination string is not large enough" << endl;
+        return;
+    }
     int i = str_len(str1);
     for (int j = 0; j <= str_len(str2); j++) {
         str1[i + j] = str2[j];

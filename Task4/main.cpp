@@ -38,8 +38,10 @@ int main() {
     cout << endl;
 
     char str_concat1[] = "Hello, \0";
-    char str_concat2[] = "Lomy\0";
-    str_concat(str_concat1, str_concat2);
+    char str_concat2[] = "Lomy Lomy\0";
+    // str_concat(10, str_concat1, str_concat2);
+    str_concat(100, str_concat1, str_concat2);
+
     cout << "After concatenation: '" << str_concat1 << "'" << endl;
 
     return 0;
