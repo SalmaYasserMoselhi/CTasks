@@ -1,5 +1,6 @@
 #include "string_library.h"
 #include <iostream>
+using namespace std;
 
 int str_len(char str[]) {
     int length = 0;
@@ -28,6 +29,17 @@ void to_lower(char str[]) {
 }
 
 int str_cmp(char str1[], char str2[]) {
+    // Check lengths first
+    if (str_len(str1) > str_len(str2))
+    {
+        return 1;
+    }
+    else if (str_len(str1) < str_len(str2))
+    {
+        return -1;
+    }
+    
+
     int i = 0;
     while (str1[i] != '\0' && str2[i] != '\0') {
         if (str1[i] != str2[i]) {
@@ -43,5 +55,19 @@ int str_cmp(char str1[], char str2[]) {
 }
 
 
-void str_copy(char dest[], char src[]);
-void str_concat(char dest[], char src[]);
+void str_copy(char str1[], char str2[]) {
+    int i = 0;
+    while (str2[i] != '\0') {
+        str1[i] = str2[i];
+        i++;
+    }
+    str1[i] = '\0';
+}
+
+void str_concat(char str1[], char str2[]) {
+    int i = str_len(str1);
+    for (int j = 0; j <= str_len(str2); j++) {
+        str1[i + j] = str2[j];
+    }
+
+}
