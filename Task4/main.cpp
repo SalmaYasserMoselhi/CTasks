@@ -2,7 +2,7 @@
 #include "string_library.h"
 using namespace std;
 int main() {
-    char str1[] = "Hello\0";
+    char str1[] = "Hello";
     int length = str_len(str1);
     cout << "Length of '" << str1 << "' is: " << length << endl;
     cout << endl;
@@ -16,29 +16,29 @@ int main() {
     cout << endl;
 
 
-    char str2[] = "hello\0";
-    char str3[] = "Hello\0";
-    char str4[] = "Hello World\0";
+    char str2[] = "hello";
+    char str3[] = "Hello";
+    char str4[] = "Hello World";
     cout << "Comparison of '" << str1 << "' and '" << str2 << "': " << str_cmp(str1, str2) << endl;
     cout << "Comparison of '" << str1 << "' and '" << str3 << "': " << str_cmp(str1, str3) << endl;
     cout << "Comparison of '" << str1 << "' and '" << str4 << "': " << str_cmp(str1, str4) << endl;
     cout << endl;
 
 
-    char dest[] = "Test\0";
-    char src[] = "Little Lomy\0";
+    char dest[] = "Test";
+    char src[] = "Little Lomy";
     str_copy(dest, src);
     cout << "After copying, dest contains: '" << dest << "'" << endl;
 
 
     char dest2[5];
-    char src2[] = "Another Try\0";
+    char src2[] = "Another Try";
     str_copy(dest2, src2);
     cout << "After copying, dest2 contains: '" << dest2 << "'" << endl;
     cout << endl;
 
-    char str_concat1[] = "Hello, \0";
-    char str_concat2[] = "Lomy Lomy\0";
+    char str_concat1[] = "Hello, ";
+    char str_concat2[] = "Lomy Lomy";
     // str_concat(10, str_concat1, str_concat2);
     str_concat(100, str_concat1, str_concat2);
 
