@@ -74,7 +74,6 @@ bool drawText(int x, int y, const std::string &text)
 std::string colorText(const std::string &text, Color color)
 {
     std::string out;
-    out.reserve(text.size() + 10);
     out.append(colorToAnsi(color));
     out.append(text);
     out.append("\x1b[0m");
