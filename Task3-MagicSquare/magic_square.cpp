@@ -40,14 +40,30 @@ int magicConstant(int n) {
 }
 
 int askUserForN() {
+    std::string input;
     int n;
     while (true) {
         std::cout << "Enter an odd number for magic square size: ";
-        std::cin >> n;
+         std::cin >> input;
+
+        bool valid = true;
+        for (char c : input) {
+            if (!std::isdigit(c)) {
+                valid = false;
+                break;
+            }
+        }
+
+        if (!valid) {
+            std::cout << "Invalid input! Please enter digits only.\n";
+            continue;
+        }
+
+        n = std::stoi(input);
         if (n > 2 && n % 2 == 1) {
             return n;
         } else {
-            std::cout << "Invalid input! You must enter an odd number.\n";
+            std::cout << "Number must be greater than 2 and odd.\n";
         }
     }
 }
