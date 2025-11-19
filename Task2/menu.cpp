@@ -1,51 +1,50 @@
 #include "menu.h"
 #include "terminal_utils.h"
+
 #include <iostream>
+using namespace std;
 
 #if defined(_WIN32)
 #include <conio.h>
 #else
 #include <termios.h>
 #include <unistd.h>
-#include <sys/select.h>
-#include <cstdio>
+// #include <sys/select.h>
+// #include <cstdio>
 #endif
+#include <limits>
 
+
+#define COL 12
+#define ROW_NEW 7
+#define ROW_DISPLAY 9
+#define ROW_EXIT 11
 
 // clear to end of the current line (after drawText positioned cursor)
-static void clearToEol()
-{
-    std::cout << "\x1b[K";
+// static void clearToEOL(){
+//     std::cout << "\x1b[K";
+// }
+
+
+void drawBtn (int y, const char *label, bool sel){
+        Color c = sel ? BrightCyan : Default;
+        drawText(COL, y, colorText(label, c));
 }
 
 // draw the menu vertically with a selected index
 static void drawMenuUI(int selected)
 {
     drawText(10, 4, colorText("=== Main Menu ===", Default));
-    clearToEol();
 
-    // Button positions (vertically aligned)
-    const int x = 12;
-    const int yNew = 7;
-    const int yDisplay = 9;
-    const int yExit = 11;
-
-    auto btn = [&](int y, const char *label, bool sel)
-    {
-        Color c = sel ? BrightCyan : Default;
-        drawText(x, y, colorText(label, c));
-        clearToEol();
-    };
-
-    btn(yNew, "[ New ]", selected == 0);
-    btn(yDisplay, "[ Display ]", selected == 1);
-    btn(yExit, "[ Exit ]", selected == 2);
+    drawBtn(ROW_NEW, "[ New ]", selected == 0);
+    drawBtn(ROW_DISPLAY, "[ Display ]", selected == 1);
+    drawBtn(ROW_EXIT, "[ Exit ]", selected == 2);
 
     drawText(10, 14, colorText("Left=Up  Right=Down  Enter=select  Esc=quit  Backspace=back", BrightBlack));
-    clearToEol();
+    
 
     // Park cursor away from UI
-    std::cout << "\x1b[1000;1H";
+    std::cout << "\x1b[1000;1H";  // hide cursor
     std::cout.flush();
 }
 
@@ -180,14 +179,6 @@ static Key readKey()
 }
 #endif
 
-// Optional non-interactive menu render (kept as a simple call)
-void showMenu()
-{
-    clearScreen();
-    drawMenuUI(0);
-    std::cout.flush();
-}
-
 // Wait screen after selection; Backspace returns to menu, Esc exits with -1
 static int showSelectionScreen(int selected)
 {
@@ -229,8 +220,8 @@ int showMenuInteractive()
     TerminalRawMode _rawModeGuard;
 #endif
 
-    // Hide cursor for the entire interactive session
-    std::cout << "\x1b[?25l";
+    std::cout << "\x1b[?25l";  // hide cursor
+    cout.flush();
 
     int selected = 0;
 
@@ -282,7 +273,7 @@ int showMenuInteractive()
 
         case KeyEsc:
             clearScreen();
-            std::cout << "\x1b[?25h";
+            std::cout << "\x1b[?25h";  // show cursor
             std::cout.flush();
             return -1;
 
