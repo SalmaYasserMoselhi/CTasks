@@ -32,11 +32,11 @@ int str_cmp(char str1[], char str2[]) {
     // Check lengths first
     if (str_len(str1) > str_len(str2))
     {
-        return 1;
+        return 5;
     }
     else if (str_len(str1) < str_len(str2))
     {
-        return -1;
+        return -5;
     }
     
 

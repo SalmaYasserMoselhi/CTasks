@@ -1,14 +1,21 @@
+// terminal_utils.cpp
 #include "terminal_utils.h"
 
 #include <iostream>
-#include <chrono>
+#include <string>
 #include <thread>
+#include <chrono>
+#include <cstdlib>
 
 #if defined(_WIN32)
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 #else
-#include <unistd.h>
+#include <fcntl.h>
 #endif
+#include <unistd.h>
 
 namespace
 {
@@ -56,16 +63,15 @@ namespace
 
     inline bool validPos(int x, int y)
     {
-        // ANSI cursor addressing is 1-based
-        return x >= 1 && y >= 1;
+        return x >= 1 && y >= 1; // 1-based coordinates
     }
 }
 
+// ANSI cursor move + print (x: column, y: row)
 bool drawText(int x, int y, const std::string &text)
 {
     if (!validPos(x, y))
         return false;
-
     std::cout << "\x1b[" << y << ";" << x << "H" << text;
     std::cout.flush();
     return true;
@@ -77,7 +83,7 @@ std::string colorText(const std::string &text, Color color)
     out.append(colorToAnsi(color));
     out.append(text);
     out.append("\x1b[0m");
-    return out; 
+    return out;  // output example: "\x1b[31mText\x1b[0m"
 }
 
 void resetColor()
@@ -88,15 +94,16 @@ void resetColor()
 
 void clearScreen()
 {
-    // Clear screen and move cursor to top-left
-    std::cout << "\x1b[2J\x1b[H";
+    // Clear screen, clear scrollback, move home
+    std::cout << "\x1b[H\x1b[2J\x1b[3J\x1b[H";
     std::cout.flush();
 }
 
+// Keep the original delay behavior per your request.
 void delay(int milliseconds)
 {
 #if defined(_WIN32)
-    Sleep(milliseconds); 
+    Sleep(milliseconds);
 #else
     usleep(milliseconds * 1000);
 #endif
