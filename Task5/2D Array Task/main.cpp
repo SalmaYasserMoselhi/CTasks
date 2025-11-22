@@ -1,36 +1,28 @@
 #include <iostream>
 using namespace std;
-#define MAX 100
 
-void Input2D(int arr[][MAX], int rows, int cols) {
+#define MAX_ROWS 3
+#define MAX_COLS 3
+
+void manipulateArr(int arr[][MAX_COLS], int rows, int cols) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
-            cin >> arr[i][j];
+            arr[i][j] = i * j;
         }
-    }
-}
-
-void Display2D(int arr[][MAX], int rows, int cols) {
-    cout << "The 2D Array is:" << endl;
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            cout << arr[i][j] << "\t";
-        }
-        cout << endl;
     }
 }
 
 int main() {
-    int rows, cols;
-    cout << "Enter number of rows: ";
-    cin >> rows;
-    cout << "Enter number of columns: ";
-    cin >> cols;
+    int arr[MAX_ROWS][MAX_COLS]; 
 
-    int arr[MAX][MAX];
+    manipulateArr(arr, MAX_ROWS, MAX_COLS);
 
-    Input2D(arr, rows, cols);
-    Display2D(arr, rows, cols);
+    for (int i = 0; i < MAX_ROWS; i++) {
+        for (int j = 0; j < MAX_COLS; j++) {
+            cout << arr[i][j] << "\t";
+        }
+        cout << "\n";
+    }
 
     return 0;
 }
