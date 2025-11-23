@@ -1,11 +1,13 @@
 #ifndef EMPLOYEES_H
 #define EMPLOYEES_H
+#include <string>
+using namespace std;
 
 struct Employee {
-    char firstName[20];
-    char lastName[20];
+    string firstName;
+    string lastName;
     int age;
-    char department[20];
+    string department;
 };
 
 void addEmployee();
