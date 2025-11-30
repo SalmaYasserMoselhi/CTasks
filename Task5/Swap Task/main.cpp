@@ -26,13 +26,25 @@ int main() {
     cout << "x=" << x << " y=" << y << endl;
 
     swapAddSub(x, y);
-    cout << "swapAddSub: x=" << x << " y=" << y << endl;
+    cout << "swap using Add & Sub: x=" << x << " y=" << y << endl;
 
     swapMulDiv(x, y);
-    cout << "swapMulDiv: x=" << x << " y=" << y << endl;
+    cout << "swap using Mul & Div: x=" << x << " y=" << y << endl;
 
     swapXOR(x, y);
-    cout << "swapXOR: x=" << x << " y=" << y << endl;
+    cout << "swap using XOR: x=" << x << " y=" << y << endl;
 
     return 0;
 }
+
+
+/*
+0010
+0100
+----- XOR
+0110
+----- XOR
+0010
+----- XOR
+0100
+*/

@@ -173,6 +173,8 @@ static Key readKey()
 
     return KeyNone;
 }
+
+
 #endif
 
 static int showSelectionScreen(int selected)
