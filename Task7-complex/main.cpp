@@ -15,6 +15,11 @@ int main() {
     cout << "c1 = " << c1.getReal() << " + " << c1.getImag() << "i" << endl;
 
     cout << "---------------------------------\n";
+    cout << "Display c2: ";
+    c2.display(); // Display using member function
+    cout << endl;
+
+    cout << "---------------------------------\n";
     Complex sum1 = c2 + c3; // Complex + Complex
     cout << c2 << " + " << c3 << " = " << sum1 << endl;
 
@@ -40,6 +45,19 @@ int main() {
 
     cout << "---------------------------------\n";
     cout << "-" << c2 << " = " << -c2 << endl;
+
+    cout << "---------------------------------\n";
+    Complex div = c3 / c2; // Complex / Complex
+    cout << c3 << " / " << c2 << " = " << div << endl;
+
+    cout << "---------------------------------\n";
+    // denom = 0 check
+    Complex zero(0, 0);
+    try {
+        Complex divByZero = c3 / zero; // This should throw an exception
+    } catch (const runtime_error& e) {
+        cout << e.what() << endl;
+    }
 
     cout << "---------------------------------\n";
     Complex c4(1, 1);
