@@ -8,12 +8,9 @@
 #include <unistd.h>
 #include <cstdio>
 
-// ==============================
-// Ask user for buffer size
-// ==============================
+
 static int promptForSize()
 {
-    // ✅ تأكد إن raw mode مطفي تماماً
     disableRawMode();
     delay(100);
     
@@ -25,7 +22,6 @@ static int promptForSize()
         
         std::string input;
         
-        // ✅ فعّل raw mode جديد نضيف
         enableRawMode();
         showCursor();
         
@@ -44,7 +40,7 @@ static int promptForSize()
             }
             else if (k >= '0' && k <= '9')
             {
-                if (input.size() < 5)  // ✅ max 5 digits (10000)
+                if (input.size() < 5)  // max 5 digits (10000)
                 {
                     input += (char)k;
                     std::cout << (char)k << std::flush;
@@ -80,16 +76,10 @@ static int promptForSize()
             continue;
         }
 
-        // ✅ خليه شغال لأن الـ editor محتاجه
-        // enableRawMode(); // مش محتاجة لأنه already enabled
         return size;
     }
 }
 
-
-// ==============================
-// Draw editor UI
-// ==============================
 static void drawEditorLine(const std::string &line, int cursor, int maxSize)
 {
     clearScreen();
@@ -107,9 +97,7 @@ static void drawEditorLine(const std::string &line, int cursor, int maxSize)
     std::cout << "\x1b[8;" << cx << "H" << std::flush;
 }
 
-// ==============================
-// Save text buffer to a file
-// ==============================
+
 static void saveToFile(const std::string &line)
 {
     // Stay in raw mode but show cursor
@@ -195,9 +183,7 @@ static void saveToFile(const std::string &line)
     waitForAnyKey();
 }
 
-// ==============================
-// Save/Discard Menu
-// ==============================
+
 static int showSaveDiscardMenu()
 {
     int selected = 0;
@@ -225,9 +211,7 @@ static int showSaveDiscardMenu()
     }
 }
 
-// ==============================
-// MAIN EDITOR
-// ==============================
+
 int run_editor_new()
 {
     int maxSize = promptForSize();
@@ -289,12 +273,7 @@ int run_editor_new()
     return 0;
 }
 
-// ==============================
-// Display mode placeholder
-// ==============================
-// ==============================
-// Display mode - read and show file content
-// ==============================
+
 int run_editor_display()
 {
     disableRawMode();
@@ -303,7 +282,6 @@ int run_editor_display()
     clearScreen();
     showCursor();
 
-    // ✅ اطلب اسم الملف
     drawText(5, 5, colorText("Enter filename: ", BrightCyan));
     std::cout << "\x1b[5;24H" << std::flush;
     
@@ -339,7 +317,6 @@ int run_editor_display()
     if (filename.empty())
         filename = "default.txt";
 
-    // ✅ افتح واقرا الملف
     FILE *fp = fopen(filename.c_str(), "r");
     
     clearScreen();
@@ -355,13 +332,11 @@ int run_editor_display()
         return 0;
     }
 
-    // ✅ اقرا المحتوى كله
     char buffer[5000];
     size_t bytesRead = fread(buffer, 1, sizeof(buffer) - 1, fp);
     buffer[bytesRead] = '\0';
     fclose(fp);
 
-    // ✅ اعرض المحتوى
     drawText(5, 3, colorText("=== " + filename + " ===", BrightBlue));
     drawText(5, 5, colorText("Content:", BrightCyan));
     
