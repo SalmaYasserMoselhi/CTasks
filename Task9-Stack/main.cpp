@@ -24,7 +24,7 @@ int main() {
     s.display();
     
     cout << "\nTesting copy constructor:" << endl;
-    Stack s2 = s; // or Stack s2(s) --> Both calls deep copy constructor
+    Stack s2(s);
     s2.display();
     
     cout << "\nTesting assignment operator:" << endl;
