@@ -22,7 +22,6 @@ public:
     void setImag(int i);
     int getReal() const;
     int getImag() const;
-
     void display() const;
     
     // Overloaded Operators
@@ -49,6 +48,14 @@ public:
     bool operator==(const Complex& other) const;
     bool operator!=(const Complex& other) const;
     
+    Complex& operator++();      // Prefix ++
+    Complex operator++(int);    // Postfix ++
+
+    // Subscript operator
+    int& operator[](int index);
+
+    // NOT operator
+    bool operator!() const;
 };
 
 #endif // COMPLEX_H

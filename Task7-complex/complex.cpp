@@ -123,3 +123,32 @@ bool Complex::operator!=(const Complex& other) const {
     return !(*this == other);
 }
 
+
+// returns real part for [0], imaginary for [1]
+int& Complex::operator[](int index) {
+    if (index == 0) {
+        return real;
+    } else if (index == 1) {
+        return imag;
+    } else {
+        throw out_of_range("Index must be 0 (real) or 1 (imaginary)");
+    }
+}
+
+// Prefix increment: ++c
+Complex& Complex::operator++() {
+    ++real;
+    return *this;
+}
+
+// Postfix increment: c++
+Complex Complex::operator++(int) {
+    Complex temp(*this);
+    ++real;
+    return temp;
+}
+
+// Logical NOT operator - returns true if complex number is zero
+bool Complex::operator!() const {
+    return (real == 0 && imag == 0);
+}
