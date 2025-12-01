@@ -92,14 +92,10 @@ static void drawEditorLine(const char* line, int cursor, int maxSize)
     clearScreen();
     drawText(5, 3, colorText("=== Text Editor ===", BrightBlue));
     drawText(5, 5, colorText("ESC = exit | ← → move | Backspace delete | type", BrightBlack));
-
-    char counter[50];
-    sprintf(counter, "( %d / %d )", (int)strlen(line), maxSize);
-    drawText(5, 6, colorText(counter, BrightCyan));
-    drawText(5, 8, line);
+    drawText(5, 7, line);
 
     int cx = 5 + cursor;
-    std::cout << "\x1b[8;" << cx << "H" << std::flush;
+    std::cout << "\x1b[7;" << cx << "H" << std::flush;
 }
 
 static void saveToFile(const char* line)
@@ -200,6 +196,7 @@ int run_editor_new()
 
     showCursor();
     
+    // Allocate buffer on heap
     char* line = new char[maxSize + 1];
     line[0] = '\0';
     int cursor = 0;
