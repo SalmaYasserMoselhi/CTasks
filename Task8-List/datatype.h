@@ -17,10 +17,10 @@ public:
     void display();
 };
 
-class FLoat : public DataType {
+class Float : public DataType {
     float num;
 public:
-    FLoat(float n);
+    Float(float n);
     void display();
 };
 

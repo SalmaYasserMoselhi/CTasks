@@ -12,6 +12,7 @@ List::~List() {
     }
     delete[] items;
 }
+
 void List::append(DataType* element) {
     if(!element) {
         cout << "Error: Cannot append null element!" << endl;
@@ -40,7 +41,7 @@ void List::append(int value) {
 }
 
 void List::append(float value) {
-    DataType* element = new FLoat(value);
+    DataType* element = new Float(value);
     append(element);
 }
 

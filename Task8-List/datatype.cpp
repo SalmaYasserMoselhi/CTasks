@@ -32,7 +32,7 @@ DataType* getDataType(string input) {
         return new Int(stoi(input));
     }
     if(isFloat(input)) {
-        return new FLoat(stof(input));
+        return new Float(stof(input));
     }
     if(input.length() == 1) {
         return new Char(input[0]);
@@ -44,7 +44,7 @@ Int::Int(int n) {
     num = n;
 }
 
-FLoat::FLoat(float n) {
+Float::Float(float n) {
     num = n;
 }
 
@@ -64,7 +64,7 @@ void Int::display() {
     cout << num;
 }
 
-void FLoat::display() {
+void Float::display() {
     cout << num;
 }
 
