@@ -2,113 +2,21 @@
 #include "terminal_utils.h"
 
 #include <iostream>
-#include <string>
-#include <limits>
-#include <termios.h>
-#include <unistd.h>
+#include <cstring>
 #include <cstdio>
 
-
-static int promptForSize()
+// Helper function to get user input in raw mode
+static char* getInputInRawMode(int x, int y, const char* prompt, bool numbersOnly = false, int maxLen = 50)
 {
-    disableRawMode();
-    delay(100);
+    drawText(x, y, colorText(prompt, BrightCyan));
+    std::cout << "\x1b[" << y << ";" << (x + strlen(prompt)) << "H" << std::flush;
     
-    while (true)
-    {
-        clearScreen();
-        drawText(5, 5, colorText("Enter text buffer size (1-10000): ", BrightCyan));
-        std::cout << "\x1b[5;38H" << std::flush;
-        
-        std::string input;
-        
-        enableRawMode();
-        showCursor();
-        
-        while (true)
-        {
-            Key k = readKey();
-            if (k == KeyNone) { delay(10); continue; }
-            
-            if (k == KeyEnter)
-                break;
-            else if (k == KeyBackspace && !input.empty())
-            {
-                input.pop_back();
-                std::cout << "\x1b[5;38H" << std::string(20, ' ') 
-                          << "\x1b[5;38H" << input << std::flush;
-            }
-            else if (k >= '0' && k <= '9')
-            {
-                if (input.size() < 5)  // max 5 digits (10000)
-                {
-                    input += (char)k;
-                    std::cout << (char)k << std::flush;
-                }
-            }
-            else if (k == KeyEsc)
-            {
-                disableRawMode();
-                return -1;
-            }
-        }
-
-        if (input.empty())
-        {
-            drawText(5, 7, colorText("✗ Error: input cannot be empty!", BrightRed));
-            std::cout.flush();
-            delay(1500);
-            // ✅ لازم تطفي raw mode قبل اللوب يعيد
-            disableRawMode();
-            delay(50);
-            continue;
-        }
-
-        int size = std::stoi(input);
-        if (size < 1 || size > 10000)
-        {
-            drawText(5, 7, colorText("✗ Must be between 1 and 10000!", BrightRed));
-            std::cout.flush();
-            delay(1500);
-            // ✅ لازم تطفي raw mode قبل اللوب يعيد
-            disableRawMode();
-            delay(50);
-            continue;
-        }
-
-        return size;
-    }
-}
-
-static void drawEditorLine(const std::string &line, int cursor, int maxSize)
-{
-    clearScreen();
-    drawText(5, 3, colorText("=== Text Editor ===", BrightBlue));
-    drawText(5, 5, colorText("ESC = exit | ← → move | Backspace delete | type", BrightBlack));
-
-    std::string counter = "( " + std::to_string(line.size()) +
-                          " / " + std::to_string(maxSize) + " )";
-
-    drawText(5, 6, colorText(counter, BrightCyan));
-
-    drawText(5, 8, line);
-
-    int cx = 5 + cursor;
-    std::cout << "\x1b[8;" << cx << "H" << std::flush;
-}
-
-
-static void saveToFile(const std::string &line)
-{
-    // Stay in raw mode but show cursor
+    char* input = new char[maxLen + 1];
+    int len = 0;
+    input[0] = '\0';
+    
     showCursor();
-    clearScreen();
-
-    // Get filename in raw mode
-    drawText(5, 5, colorText("Enter filename: ", BrightCyan));
-    std::cout << "\x1b[5;24H" << std::flush;
     
-    std::string filename;
     while (true)
     {
         Key k = readKey();
@@ -116,21 +24,96 @@ static void saveToFile(const std::string &line)
         
         if (k == KeyEnter)
             break;
-        else if (k == KeyBackspace && !filename.empty())
+        else if (k == KeyBackspace && len > 0)
         {
-            filename.pop_back();
-            std::cout << "\x1b[5;24H" << std::string(filename.size() + 10, ' ') 
-                      << "\x1b[5;24H" << filename << std::flush;
+            len--;
+            input[len] = '\0';
+            int cx = x + strlen(prompt);
+            std::cout << "\x1b[" << y << ";" << cx << "H" 
+                      << std::string(maxLen, ' ') 
+                      << "\x1b[" << y << ";" << cx << "H" 
+                      << input << std::flush;
         }
-        else if (k >= 32 && k < 127)
+        else if (k == KeyEsc)
         {
-            filename += (char)k;
+            input[0] = '\0';
+            break;
+        }
+        else if (numbersOnly && k >= '0' && k <= '9' && len < maxLen)
+        {
+            input[len++] = (char)k;
+            input[len] = '\0';
+            std::cout << (char)k << std::flush;
+        }
+        else if (!numbersOnly && k >= 32 && k < 127 && len < maxLen)
+        {
+            input[len++] = (char)k;
+            input[len] = '\0';
             std::cout << (char)k << std::flush;
         }
     }
+    
+    return input;
+}
 
-    if (filename.empty())
-        filename = "default.txt";
+static int promptForSize()
+{
+    while (true)
+    {
+        clearScreen();
+        char* input = getInputInRawMode(5, 5, "Enter text buffer size (1-10000): ", true, 5);
+        
+        if (strlen(input) == 0)
+        {
+            delete[] input;
+            drawText(5, 7, colorText("✗ Error: input cannot be empty!", BrightRed));
+            std::cout.flush();
+            delay(1500);
+            continue;
+        }
+
+        int size = atoi(input);
+        delete[] input;
+        
+        if (size < 1 || size > 10000)
+        {
+            drawText(5, 7, colorText("✗ Must be between 1 and 10000!", BrightRed));
+            std::cout.flush();
+            delay(1500);
+            continue;
+        }
+
+        return size;
+    }
+}
+
+static void drawEditorLine(const char* line, int cursor, int maxSize)
+{
+    clearScreen();
+    drawText(5, 3, colorText("=== Text Editor ===", BrightBlue));
+    drawText(5, 5, colorText("ESC = exit | ← → move | Backspace delete | type", BrightBlack));
+
+    char counter[50];
+    sprintf(counter, "( %d / %d )", (int)strlen(line), maxSize);
+    drawText(5, 6, colorText(counter, BrightCyan));
+    drawText(5, 8, line);
+
+    int cx = 5 + cursor;
+    std::cout << "\x1b[8;" << cx << "H" << std::flush;
+}
+
+static void saveToFile(const char* line)
+{
+    clearScreen();
+    
+    // Get filename using heap-allocated buffer
+    char* filename = getInputInRawMode(5, 5, "Enter filename: ", false, 50);
+    if (strlen(filename) == 0)
+    {
+        delete[] filename;
+        filename = new char[13];
+        strcpy(filename, "default.txt");
+    }
 
     // Get save mode
     clearScreen();
@@ -150,28 +133,22 @@ static void saveToFile(const std::string &line)
         else if (k == '2') { mode = 2; break; }
     }
 
-    // heap buffer
-    int size = line.size();
-    char *buffer = new char[size + 1];
-    for (int i = 0; i < size; i++)
-        buffer[i] = line[i];
-    buffer[size] = '\0';
-
-    FILE *fp = nullptr;
-    fp = fopen(filename.c_str(), (mode == 1 ? "w" : "a"));
+    // Open file and write
+    FILE* fp = fopen(filename, (mode == 1 ? "w" : "a"));
 
     if (!fp)
     {
-        drawText(5, 14, colorText("✗ Failed to open file!", BrightRed));
+        clearScreen();
+        drawText(5, 8, colorText("✗ Failed to open file!", BrightRed));
+        drawText(5, 10, colorText("Press any key...", BrightBlack));
         std::cout.flush();
-        delete[] buffer;
-        delay(1500);
+        delete[] filename;
+        waitForAnyKey();
         return;
     }
 
-    fputs(buffer, fp);
+    fputs(line, fp);
     fclose(fp);
-    delete[] buffer;
 
     clearScreen();
     drawText(5, 8, colorText("✓ Saved successfully to:", BrightGreen));
@@ -179,15 +156,13 @@ static void saveToFile(const std::string &line)
     drawText(5, 13, colorText("Press any key...", BrightBlack));
     std::cout.flush();
 
-    // Now waitForAnyKey works because we're STILL in raw mode!
+    delete[] filename;
     waitForAnyKey();
 }
-
 
 static int showSaveDiscardMenu()
 {
     int selected = 0;
-    enableRawMode();
 
     while (true)
     {
@@ -200,6 +175,7 @@ static int showSaveDiscardMenu()
         drawText(12, 8, colorText("[ Save ]", c0));
         drawText(12, 10, colorText("[ Discard ]", c1));
         drawText(10, 13, colorText("↑↓ navigate | Enter select", BrightBlack));
+        std::cout.flush();
 
         Key k = readKey();
 
@@ -211,17 +187,21 @@ static int showSaveDiscardMenu()
     }
 }
 
-
 int run_editor_new()
 {
+    enableRawMode();
+    
     int maxSize = promptForSize();
     if (maxSize <= 0)
+    {
+        disableRawMode();
         return 0;
+    }
 
-    enableRawMode();
     showCursor();
-
-    std::string line;
+    
+    char* line = new char[maxSize + 1];
+    line[0] = '\0';
     int cursor = 0;
 
     drawEditorLine(line, cursor, maxSize);
@@ -231,24 +211,28 @@ int run_editor_new()
         Key k = readKey();
         if (k == KeyNone) { delay(10); continue; }
 
+        int len = strlen(line);
+
         if (k == KeyEsc)
             break;
         else if (k == KeyLeft && cursor > 0)
             cursor--;
-        else if (k == KeyRight && cursor < (int)line.size())
+        else if (k == KeyRight && cursor < len)
             cursor++;
         else if (k == KeyBackspace && cursor > 0)
         {
-            line.erase(cursor - 1, 1);
+            // Shift characters left
+            for (int i = cursor - 1; i < len; i++)
+                line[i] = line[i + 1];
             cursor--;
         }
-        else if (k >= 32 && k < 127)
+        else if (k >= 32 && k < 127 && len < maxSize)
         {
-            if ((int)line.size() < maxSize)
-            {
-                line.insert(line.begin() + cursor, (char)k);
-                cursor++;
-            }
+            // Shift characters right to make space
+            for (int i = len; i >= cursor; i--)
+                line[i + 1] = line[i];
+            line[cursor] = (char)k;
+            cursor++;
         }
 
         drawEditorLine(line, cursor, maxSize);
@@ -257,87 +241,60 @@ int run_editor_new()
     int choice = showSaveDiscardMenu();
 
     if (choice == 0)
-        saveToFile(line);  // Still in raw mode!
+        saveToFile(line);
     else
     {
         clearScreen();
         drawText(10, 8, colorText("User chose: DISCARD ✗", BrightRed));
         drawText(10, 10, colorText("Press any key...", BrightCyan));
         std::cout.flush();
-        waitForAnyKey();  // Still in raw mode!
+        waitForAnyKey();
     }
 
+    delete[] line;
     disableRawMode();
-    showCursor();
     clearScreen();
     return 0;
 }
 
-
 int run_editor_display()
 {
-    disableRawMode();
-    delay(100);
-    
+    enableRawMode();
     clearScreen();
     showCursor();
 
-    drawText(5, 5, colorText("Enter filename: ", BrightCyan));
-    std::cout << "\x1b[5;24H" << std::flush;
+    char* filename = getInputInRawMode(5, 5, "Enter filename: ", false, 50);
     
-    std::string filename;
-    enableRawMode();
-    
-    while (true)
+    if (strlen(filename) == 0)
     {
-        Key k = readKey();
-        if (k == KeyNone) { delay(10); continue; }
-        
-        if (k == KeyEnter)
-            break;
-        else if (k == KeyBackspace && !filename.empty())
-        {
-            filename.pop_back();
-            std::cout << "\x1b[5;24H" << std::string(50, ' ') 
-                      << "\x1b[5;24H" << filename << std::flush;
-        }
-        else if (k == KeyEsc)
-        {
-            disableRawMode();
-            clearScreen();
-            return 0;
-        }
-        else if (k >= 32 && k < 127)
-        {
-            filename += (char)k;
-            std::cout << (char)k << std::flush;
-        }
+        delete[] filename;
+        filename = new char[13];
+        strcpy(filename, "default.txt");
     }
 
-    if (filename.empty())
-        filename = "default.txt";
-
-    FILE *fp = fopen(filename.c_str(), "r");
-    
     clearScreen();
+    
+    FILE* fp = fopen(filename, "r");
     
     if (!fp)
     {
         drawText(5, 7, colorText("✗ File not found!", BrightRed));
         drawText(5, 9, colorText("Press any key...", BrightBlack));
         std::cout.flush();
+        delete[] filename;
         waitForAnyKey();
         disableRawMode();
         clearScreen();
         return 0;
     }
 
-    char buffer[5000];
-    size_t bytesRead = fread(buffer, 1, sizeof(buffer) - 1, fp);
+    // Allocate buffer for file content on heap
+    char* buffer = new char[5000];
+    size_t bytesRead = fread(buffer, 1, 4999, fp);
     buffer[bytesRead] = '\0';
     fclose(fp);
 
-    drawText(5, 3, colorText("=== " + filename + " ===", BrightBlue));
+    drawText(5, 3, colorText(std::string("=== ") + filename + " ===", BrightBlue));
     drawText(5, 5, colorText("Content:", BrightCyan));
     
     std::cout << "\x1b[7;5H" << buffer << std::flush;
@@ -345,6 +302,9 @@ int run_editor_display()
     drawText(5, 22, colorText("Press any key to return...", BrightBlack));
     std::cout.flush();
 
+    delete[] buffer;
+    delete[] filename;
+    
     waitForAnyKey();
     disableRawMode();
     clearScreen();
