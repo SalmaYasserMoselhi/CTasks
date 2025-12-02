@@ -10,8 +10,8 @@ using namespace std;
 #define ROW_DISPLAY 9
 #define ROW_EXIT 11
 
-constexpr int RETURNTOMENU = -2;
-constexpr int EXITPROGRAM  = -1;
+const int RETURNTOMENU = -2;
+const int EXITPROGRAM  = -1;
 
 static void drawBtn(int y, const char *label, bool sel)
 {
@@ -26,12 +26,11 @@ static void drawMenuUI(int selected)
     drawBtn(ROW_DISPLAY, "[ Display ]", selected == 1);
     drawBtn(ROW_EXIT,    "[ Exit ]",    selected == 2);
     drawText(10, 14, colorText("Up/Down or Left/Right = navigate | Enter = select | Esc = quit", BrightBlack));
-    cout << "\x1b[1000;1H" << flush;
+    cout << "\x1b[1000;1H" << flush; 
 }
 
 static int showSelectionScreen(int selected)
 {
-    // >>> FIX: always leave raw mode before entering editor
     disableRawMode();
     showCursor();
     clearScreen();

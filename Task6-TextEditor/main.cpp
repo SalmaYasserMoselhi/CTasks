@@ -4,16 +4,7 @@
 
 int main()
 {   
-    showCursor();
-    resetColor();
-    clearScreen();
-
     int result = showMenuInteractive();
 
-    disableRawMode();
-    showCursor();
-    resetColor();
-    clearScreen();
-    std::cout << "\n";
     return 0;
 }
