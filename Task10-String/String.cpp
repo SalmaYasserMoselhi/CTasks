@@ -2,14 +2,12 @@
 
 // Helper Functions
 int String::length(const char* str) {
-    if (!str) return 0;
     int count = 0;
     while (str[count] != '\0') count++;
     return count;
 }
 
 char* String::strcpy(char* dest, const char* src) {
-    if (!dest || !src) return dest;
     int i = 0;
     while (src[i] != '\0') {
         dest[i] = src[i];
@@ -20,7 +18,6 @@ char* String::strcpy(char* dest, const char* src) {
 }
 
 char* String::strcat(char* dest, const char* src) {
-    if (!dest || !src) return dest;
     int i = 0;
     while (dest[i] != '\0') i++;
     int j = 0;
@@ -32,10 +29,12 @@ char* String::strcat(char* dest, const char* src) {
 }
 
 // Constructors
-String::String() : data(nullptr), len(0) {
+String::String() {
+    len = 0;
     data = new char[1];
     data[0] = '\0';
 }
+
 
 String::String(const char* str) {
     if (!str) {
@@ -49,6 +48,7 @@ String::String(const char* str) {
     }
 }
 
+// Deep copy
 String::String(const String& other) {
     len = other.len;
     data = new char[len + 1];
@@ -85,11 +85,7 @@ char& String::operator[](int index) {
     return data[index];
 }
 
-const char& String::operator[](int index) const {
-    return data[index];
-}
 
-// Modifiers
 void String::append(const String& str) {
     char* temp = new char[len + str.len + 1];
     strcpy(temp, data);
