@@ -31,24 +31,24 @@ void Complex::display() const {
 }
 
 
-Complex Complex::operator+(const Complex& other) const {
+Complex Complex::operator+(const Complex& other) const { // c + c1
     return Complex(real + other.real, imag + other.imag);
 }
 
-Complex Complex::operator+(int value) const {
+Complex Complex::operator+(int value) const { // c + 5
     return Complex(real + value, imag);
 }
 
 // Non-member function
-Complex operator+(int lhs, const Complex& rhs) {
+Complex operator+(int lhs, const Complex& rhs) { // 5 + c
     return Complex(lhs + rhs.real, rhs.imag);
 }
 
-Complex Complex::operator-(const Complex& other) const {
+Complex Complex::operator-(const Complex& other) const {  // c - c1
     return Complex(real - other.real, imag - other.imag);
 }
 
-Complex Complex::operator-(int value) const {
+Complex Complex::operator-(int value) const { // c - 5
     return Complex(real - value, imag);
 }
 
@@ -73,10 +73,11 @@ Complex Complex::operator/(const Complex& other) const {
 }
 
 
-Complex Complex::operator-() const {
+Complex Complex::operator-() const { // -c
     return Complex(-real, -imag);
 }
 
+// Non-member functions
 ostream& operator<<(ostream& os, const Complex& c) {
     os << "(" << c.real;
     if (c.imag >= 0)
@@ -95,20 +96,20 @@ istream& operator>>(istream& is, Complex& c) {
 }
 
 
-Complex& Complex::operator+=(const Complex& rhs) {
+Complex& Complex::operator+=(const Complex& rhs) { // c += c1
     real += rhs.real;
     imag += rhs.imag;
     return *this;
 }
 
-Complex& Complex::operator-=(const Complex& rhs) {
+Complex& Complex::operator-=(const Complex& rhs) { // c -= c1
     real -= rhs.real;
     imag -= rhs.imag;
     return *this;
 }
 
 
-Complex& Complex::operator=(const Complex& other) {
+Complex& Complex::operator=(const Complex& other) { // c = c1
     if (this == &other) return *this;
     real = other.real;
     imag = other.imag;

@@ -25,23 +25,40 @@ namespace
     {
         switch (c)
         {
-        case Black: return "\x1b[30m";
-        case Red: return "\x1b[31m";
-        case Green: return "\x1b[32m";
-        case Yellow: return "\x1b[33m";
-        case Blue: return "\x1b[34m";
-        case Magenta: return "\x1b[35m";
-        case Cyan: return "\x1b[36m";
-        case White: return "\x1b[37m";
-        case BrightBlack: return "\x1b[90m";
-        case BrightRed: return "\x1b[91m";
-        case BrightGreen: return "\x1b[92m";
-        case BrightYellow: return "\x1b[93m";
-        case BrightBlue: return "\x1b[94m";
-        case BrightMagenta: return "\x1b[95m";
-        case BrightCyan: return "\x1b[96m";
-        case BrightWhite: return "\x1b[97m";
-        default: return "\x1b[39m";
+        case Black:
+            return "\x1b[30m";
+        case Red:
+            return "\x1b[31m";
+        case Green:
+            return "\x1b[32m";
+        case Yellow:
+            return "\x1b[33m";
+        case Blue:
+            return "\x1b[34m";
+        case Magenta:
+            return "\x1b[35m";
+        case Cyan:
+            return "\x1b[36m";
+        case White:
+            return "\x1b[37m";
+        case BrightBlack:
+            return "\x1b[90m";
+        case BrightRed:
+            return "\x1b[91m";
+        case BrightGreen:
+            return "\x1b[92m";
+        case BrightYellow:
+            return "\x1b[93m";
+        case BrightBlue:
+            return "\x1b[94m";
+        case BrightMagenta:
+            return "\x1b[95m";
+        case BrightCyan:
+            return "\x1b[96m";
+        case BrightWhite:
+            return "\x1b[97m";
+        default:
+            return "\x1b[39m";
         }
     }
 
@@ -54,7 +71,8 @@ namespace
 // ====== BASIC OUTPUT ======
 bool drawText(int x, int y, const std::string &text)
 {
-    if (!validPos(x, y)) return false;
+    if (!validPos(x, y))
+        return false;
     std::cout << "\x1b[" << y << ";" << x << "H" << text;
     std::cout.flush();
     return true;
@@ -114,38 +132,53 @@ void enableRawMode()
 
 bool stdinHasData(int timeoutUsec)
 {
-    fd_set rfds; FD_ZERO(&rfds); FD_SET(STDIN_FILENO, &rfds);
-    timeval tv{}; tv.tv_usec = timeoutUsec;
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(STDIN_FILENO, &rfds);
+    timeval tv{};
+    tv.tv_usec = timeoutUsec;
     return select(STDIN_FILENO + 1, &rfds, nullptr, nullptr, &tv) == 1;
 }
 
 static int readCharWithTimeout(int timeoutUsec)
 {
-    if (!stdinHasData(timeoutUsec)) return -1;
+    if (!stdinHasData(timeoutUsec))
+        return -1;
     return getchar();
 }
 
 Key readKey()
 {
-    int c = readCharWithTimeout(30000);
-    if (c == -1 || c == EOF) return KeyNone;
+    int c = readCharWithTimeout(30000); // tries to read char in 30ms
+    if (c == -1 || c == EOF)
+        return KeyNone;
 
-    if (c == 27)
+    if (c == 27) // ESC = 27
     {
         int b1 = readCharWithTimeout(30000);
-        if (b1 == -1) return KeyEsc;
-        if (b1 != '[') return KeyEsc;
+        if (b1 == -1)
+            return KeyEsc;
+        if (b1 != '[')
+            return KeyEsc;
         int b2 = readCharWithTimeout(30000);
-        if (b2 == -1) return KeyNone;
-        if (b2 == 'A') return KeyUp;
-        if (b2 == 'B') return KeyDown;
-        if (b2 == 'C') return KeyRight;
-        if (b2 == 'D') return KeyLeft;
+        if (b2 == -1)
+            return KeyNone;
+        if (b2 == 'A')
+            return KeyUp;
+        if (b2 == 'B')
+            return KeyDown;
+        if (b2 == 'C')
+            return KeyRight;
+        if (b2 == 'D')
+            return KeyLeft;
         return KeyNone;
     }
-    if (c == '\n' || c == '\r') return KeyEnter;
-    if (c == 127 || c == 8)     return KeyBackspace;
-    if (c >= 32 && c < 127)     return (Key)c;
+    if (c == '\n' || c == '\r')
+        return KeyEnter;
+    if (c == 127 || c == 8)
+        return KeyBackspace;
+    if (c >= 32 && c < 127)
+        return (Key)c;
     return KeyNone;
 }
 #endif
@@ -155,17 +188,20 @@ void waitForAnyKey()
     while (true)
     {
         Key k = readKey();
-        if (k != KeyNone) break;
+        if (k != KeyNone)
+            break;
         delay(10);
     }
 }
 
 void hideCursor()
 {
-    std::cout << "\x1b[?25l"; std::cout.flush();
+    std::cout << "\x1b[?25l";
+    std::cout.flush();
 }
 
 void showCursor()
 {
-    std::cout << "\x1b[?25h"; std::cout.flush();
+    std::cout << "\x1b[?25h";
+    std::cout.flush();
 }
