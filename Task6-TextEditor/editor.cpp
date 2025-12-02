@@ -2,9 +2,7 @@
 #include "terminal_utils.h"
 
 #include <iostream>
-#include <string>
 #include <cstring>
-#include <cstdio>
 using namespace std;
 
 static int promptForSize()
@@ -17,26 +15,26 @@ static int promptForSize()
         drawText(5, 5, colorText("Enter text buffer size (1-10000): ", BrightCyan));
         cout.flush();
 
-        string input;
-        getline(cin, input);
+        char *input = new char[100];
+        cin.getline(input, 100);
 
-        if (input.empty())
+        if (strlen(input) == 0)
         {
             drawText(5, 7, colorText("Error: input cannot be empty!", BrightRed));
             cout.flush();
+            delete[] input;
             delay(1500);
             continue;
         }
 
-        int size;
-        try
-        {
-            size = stoi(input);
-        }
-        catch (...)
+        char *endptr;
+        long size = strtol(input, &endptr, 10); 
+
+        if (*endptr != '\0' || endptr == input) // string
         {
             drawText(5, 7, colorText("Please enter a valid number!", BrightRed));
             cout.flush();
+            delete[] input;
             delay(1500);
             continue;
         }
@@ -45,12 +43,14 @@ static int promptForSize()
         {
             drawText(5, 7, colorText("Must be between 1 and 10000!", BrightRed));
             cout.flush();
+            delete[] input;
             delay(1500);
             continue;
         }
 
+        delete[] input;
         enableRawMode();
-        return size;
+        return (int)size;
     }
 }
 
@@ -73,11 +73,11 @@ static void saveToFile(const char *line)
     drawText(5, 5, colorText("Enter filename (press Enter for default.txt): ", BrightCyan));
     cout.flush();
 
-    string filename;
-    getline(cin, filename);
+    char *filename = new char[256];
+    cin.getline(filename, 256);
 
-    if (filename.empty())
-        filename = "default.txt";
+    if (strlen(filename) == 0)
+        strcpy(filename, "default.txt");
 
     clearScreen();
     drawText(5, 5, colorText("Save Mode:", BrightBlue));
@@ -110,7 +110,7 @@ static void saveToFile(const char *line)
         }
     }
 
-    FILE *fp = fopen(filename.c_str(), (mode == 1 ? "w" : "a"));
+    FILE *fp = fopen(filename, (mode == 1 ? "w" : "a"));
 
     if (!fp)
     {
@@ -119,6 +119,7 @@ static void saveToFile(const char *line)
         drawText(5, 10, colorText("Press any key...", BrightBlack));
         cout.flush();
         waitForAnyKey();
+        delete[] filename;
         return;
     }
 
@@ -127,11 +128,12 @@ static void saveToFile(const char *line)
 
     clearScreen();
     drawText(5, 8, colorText("Saved successfully to:", BrightGreen));
-    drawText(5, 10, colorText(filename.c_str(), BrightCyan));
+    drawText(5, 10, colorText(filename, BrightCyan));
     drawText(5, 13, colorText("Press any key...", BrightBlack));
     cout.flush();
 
     waitForAnyKey();
+    delete[] filename;
 }
 
 static int showSaveDiscardMenu()
@@ -241,15 +243,15 @@ int run_editor_display()
     drawText(5, 5, colorText("Enter filename (press Enter for default.txt): ", BrightCyan));
     cout.flush();
 
-    string filename;
-    getline(cin, filename);
+    char *filename = new char[256];
+    cin.getline(filename, 256);
 
-    if (filename.empty())
-        filename = "default.txt";
+    if (strlen(filename) == 0)
+        strcpy(filename, "default.txt");
 
     clearScreen();
 
-    FILE *fp = fopen(filename.c_str(), "r");
+    FILE *fp = fopen(filename, "r");
 
     if (!fp)
     {
@@ -257,6 +259,7 @@ int run_editor_display()
         drawText(5, 9, colorText("Press Enter to return...", BrightBlack));
         cout.flush();
         cin.get();  // wait for Enter
+        delete[] filename;
         clearScreen();
         return 0;
     }
@@ -266,13 +269,21 @@ int run_editor_display()
     buffer[bytesRead] = '\0';
     fclose(fp);
 
-    drawText(5, 3, colorText(string("=== ") + filename + " ===", BrightBlue));
+    // build header string
+    char *header = new char[300];
+    strcpy(header, "=== ");
+    strcat(header, filename);
+    strcat(header, " ===");
+
+    drawText(5, 3, colorText(header, BrightBlue));
     drawText(5, 5, colorText("Content:", BrightCyan));
     drawText(5, 7, buffer);
     drawText(5, 22, colorText("Press Enter to return...", BrightBlack));
     cout.flush();
 
     delete[] buffer;
+    delete[] filename;
+    delete[] header;
 
     cin.get();
     clearScreen();

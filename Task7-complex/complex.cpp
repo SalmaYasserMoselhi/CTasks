@@ -153,3 +153,4 @@ Complex Complex::operator++(int) {
 bool Complex::operator!() const {
     return (real == 0 && imag == 0);
 }
+

@@ -132,7 +132,6 @@ bool String::operator!=(const String& other) const {
     return !(*this == other);
 }
 
-// COncatenation
 String String::operator+(const String& other) const {
     String result;
     delete[] result.data;
