@@ -4,7 +4,7 @@
 
 int main()
 {
-    atexit(disableRawMode); // أمان إضافي
+    atexit(disableRawMode); 
     
     showCursor();
     resetColor();

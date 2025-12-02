@@ -37,7 +37,6 @@ enum Key
     KeyEnter,
     KeyBackspace,
     KeyEsc,
-    // 🔧 الحروف العادية هترجع بـ ASCII value بتاعها (32-126)
     KeyChar = 32
 };
 
