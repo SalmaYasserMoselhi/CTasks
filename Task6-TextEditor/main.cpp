@@ -3,9 +3,7 @@
 #include "menu.h"
 
 int main()
-{
-    atexit(disableRawMode); 
-    
+{   
     showCursor();
     resetColor();
     clearScreen();
