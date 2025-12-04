@@ -53,6 +53,7 @@ public:
 
     // Subscript operator
     int& operator[](int index);
+    double operator()() const;
 
     // NOT operator
     bool operator!() const;

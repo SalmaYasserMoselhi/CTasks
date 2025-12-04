@@ -115,6 +115,9 @@ int main() {
     cout << "!c9 (is zero?) = " << (!c9 ? "true" : "false") << endl;
     cout << "!c10 (is zero?) = " << (!c10 ? "true" : "false") << endl;
     cout << "---------------------------------\n";
+
+    Complex c11(5,10);
+    cout << "Magnitute : " << c11() << endl;
     
     Complex userInput;
     cin >> userInput;
