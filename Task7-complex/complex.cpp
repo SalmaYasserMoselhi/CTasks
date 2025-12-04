@@ -185,3 +185,7 @@ bool Complex::operator!() const
 {
     return (real == 0 && imag == 0);
 }
+
+Complex::operator int() const {
+    return real; 
+}

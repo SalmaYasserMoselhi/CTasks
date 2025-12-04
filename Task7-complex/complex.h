@@ -57,6 +57,9 @@ public:
 
     // NOT operator
     bool operator!() const;
+
+    // Casting operator
+    operator int() const;
 };
 
 #endif // COMPLEX_H

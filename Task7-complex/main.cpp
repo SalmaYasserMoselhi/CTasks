@@ -118,6 +118,8 @@ int main() {
 
     Complex c11(5,10);
     cout << "Magnitute : " << c11() << endl;
+
+    cout << "C11 Casting: " << (int)c11 << endl;
     
     Complex userInput;
     cin >> userInput;
