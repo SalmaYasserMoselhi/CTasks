@@ -134,7 +134,6 @@ bool String::operator!=(const String& other) const {
 
 String String::operator+(const String& other) const {
     String result;
-    delete[] result.data;
     result.len = len + other.len;
     result.data = new char[result.len + 1];
     strcpy(result.data, data);
@@ -142,16 +141,6 @@ String String::operator+(const String& other) const {
     return result;
 }
 
-String String::operator+(const char* str) const {
-    String result;
-    delete[] result.data;
-    int strLen = str ? length(str) : 0;
-    result.len = len + strLen;
-    result.data = new char[result.len + 1];
-    strcpy(result.data, data);
-    if (str) strcat(result.data, str);
-    return result;
-}
 
 String String::operator+(char ch) const {
     String result;
@@ -169,10 +158,6 @@ String& String::operator+=(const String& other) {
     return *this;
 }
 
-String& String::operator+=(const char* str) {
-    append(str);
-    return *this;
-}
 
 String& String::operator+=(char ch) {
     append(ch);

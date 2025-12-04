@@ -31,10 +31,8 @@ public:
     bool operator!=(const String& other) const;
 
     String operator+(const String& other) const;
-    String operator+(const char* str) const;
     String operator+(char ch) const;
     String& operator+=(const String& other);
-    String& operator+=(const char* str);
     String& operator+=(char ch);
 
     friend std::ostream& operator<<(std::ostream& os, const String& str);
