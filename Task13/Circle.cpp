@@ -1,8 +1,17 @@
 #include "Circle.h"
 
-Circle::Circle() : GeoShape() {}
-Circle::Circle(double r) : GeoShape(r, r) {}
 
-double Circle::calcArea() {
-    return 0.5 * dim1 * dim2;
+void Circle::setRadius(double r)
+{
+    dim1 = dim2 = r;
+}
+
+double Circle::getRadius()
+{
+    return dim1;
+}
+
+double Circle::calcArea()
+{
+    return 3.14159 * dim1 * dim2;
 }

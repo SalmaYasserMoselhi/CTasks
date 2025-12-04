@@ -1,11 +1,5 @@
 #include "GeoShape.h"
 
-GeoShape::GeoShape()
-{
-    dim1 = 0;
-    dim2 = 0;
-};
-
 GeoShape::GeoShape(double dim1, double dim2)
 {
     this->dim1 = dim1;

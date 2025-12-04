@@ -1,14 +1,12 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "Triangle.h"
 #include "GeoShape.h"
 
 class Triangle : public GeoShape
 {
 public:
-    Triangle();
-    Triangle(double base, double height);
+    Triangle(double base, double height) : GeoShape(base, height) {}
     double calcArea() override;
 };
 
